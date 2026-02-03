@@ -4,7 +4,7 @@ let localTracks = null;
 let activeRoom = null;
 
 // token is for twilio access token for auth and containerId is HTML element id where video will render
-async function connectToRoom(token, roomName, containerId) {
+async function connectToRoom(token, roomName, containerId, useFakeVideo = false) {
     // Force permission prompt + lock mic
     await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -12,28 +12,21 @@ async function connectToRoom(token, roomName, containerId) {
     });
 
     try {
-        localTracks = await Twilio.Video.createLocalTracks({
-            audio: true,
-            video: true
-        });
+        if (useFakeVideo) {
+            const fakeVideoTrack = await createFakeVideoTrack();
+            const audioTrack = await Twilio.Video.createLocalTracks({ audio: true });
+            localTracks = [fakeVideoTrack, audioTrack.find(t => t.kind === 'audio')];
+        } else {
+            localTracks = await Twilio.Video.createLocalTracks({ audio: true, video: true });
+        }
 
-        // add local tracks to DOM immediately 
-        const videoTrack = localTracks.find(track => track.kind === 'video');
-        const audioTrack = localTracks.find(track => track.kind === 'audio');
-        if (videoTrack) {
-            addTrackToDOM(videoTrack, containerId);
-        }
-        if (audioTrack) {
-            addTrackToDOM(audioTrack, containerId);
-        }
+        // add local tracks to DOM
+        localTracks.forEach(track => addTrackToDOM(track, containerId));
+
 
     } catch (err) {
         console.warn("Falling back to audio-only:", err);
-
-        localTracks = await Twilio.Video.createLocalTracks({
-            audio: true,
-            video: false
-        });
+        localTracks = await Twilio.Video.createLocalTracks({ audio: true, video: false });
     }
 
 
@@ -43,28 +36,12 @@ async function connectToRoom(token, roomName, containerId) {
         tracks: localTracks
     });
 
-    // attach video/audio for participants already in the room
-    activeRoom.participants.forEach(participantConnected => {
-        attachParticipantTracks(participantConnected, containerId);
-    });
+    // attach remote participant tracks
+    activeRoom.participants.forEach(p => attachParticipantTracks(p, containerId));
 
-    // listen (events) for new participants connecting to the room
-    activeRoom.on('participantConnected', participantConnected => {
-        console.log(`Participant "${participantConnected.identity}" connected`);
-        attachParticipantTracks(participantConnected, containerId);
-    });
-
-    // listen (events) for participants leaving the room
-    activeRoom.on('participantDisconnected', participant => {
-        console.log(`Participant "${participant.identity}" disconnected`);
-        detachParticipantTracks(participant);
-    });
-
-    // listen for disconnection from the room
-    activeRoom.on('disconnected', () => {
-        console.log("Disconnected from the room");
-        detachAllTracks(containerId);
-    });
+    activeRoom.on('participantConnected', p => attachParticipantTracks(p, containerId));
+    activeRoom.on('participantDisconnected', p => detachParticipantTracks(p));
+    activeRoom.on('disconnected', () => detachAllTracks(containerId));
 }
 
 // func attach video/audio tracks from participants to the DOM
@@ -141,6 +118,24 @@ function detachAllTracks(containerId) {
 
     console.log("All tracks detached and room cleaned up");
 }
+
+// creates a fake video track from a pre-recorded video or canvas (for testing)
+async function createFakeVideoTrack() {
+    const video = document.createElement('video');
+    video.src = '/videos/sample.mp4'; 
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    await video.play();
+
+    const stream = video.captureStream();
+    const track = stream.getVideoTracks()[0];
+
+    return new Twilio.Video.LocalVideoTrack(track);
+}
+
+
+
 
 // expose the connectToRoom function to be callable from Blazor
 window.twilioVideo = {

@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.ComponentModel;
+using System.Net.Http.Json;
 using Microsoft.JSInterop;
 using ZoomCloneApp.Client.Interfaces;
 using ZoomCloneApp.Shared.Meeting.Responses;
@@ -20,7 +21,8 @@ namespace ZoomCloneApp.Client.Services
         public async Task JoinMeeting(string token, string roomName, string containerId)
         {
             // calls a js function with 4 paramters to connect to a twilio video room
-            await _js.InvokeVoidAsync("window.twilioVideo.connectToRoom", token, roomName, containerId);
+            // optionally pass a flag for guests to use fake video
+            await _js.InvokeVoidAsync("window.twilioVideo.connectToRoom", token, roomName, containerId, true);
         }
     }
 }
