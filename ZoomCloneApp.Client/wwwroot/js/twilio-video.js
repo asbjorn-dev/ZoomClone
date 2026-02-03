@@ -79,7 +79,7 @@ function attachParticipantTracks(participant, containerId) {
 
     // listen for new tracks being published by current participant
     participant.on('trackSubscribed', track => {
-        attachTrackToDOM(track, containerId);
+        addTrackToDOM(track, containerId);
     });
 
     // listen for tracks being unpublished by current participant and remove from DOM
