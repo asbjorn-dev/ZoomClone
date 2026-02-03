@@ -1,77 +1,113 @@
-Blazor ZoomClone Solution
-Denne løsning er en Blazor WebAssembly Hosted applikation bestående af en Client, Server og Shared projektstruktur.
+# ZoomClone Blazor Solution
 
-Forudsætninger
-.NET SDK
+Dette repository indeholder en Blazor-løsning med tre projekter:
 
-En IDE (Visual Studio 2022, VS Code eller Rider)
+- **Client**: Blazor WebAssembly frontend
+- **Server**: ASP.NET Core WebAPI backend
+- **Shared**: Delte modeller og logik mellem Client og Server
 
-SQLite (da din database bruger en .db fil)
+> ⚠️ Bemærk: `appsettings.json` er **ikke inkluderet** i repo’et af sikkerhedsmæssige årsager. Du skal selv oprette dem lokalt for både Client og Server.
 
-Konfiguration
-Projektet bruger appsettings.json til konfiguration, men disse er udeladt fra versionsstyring (via .gitignore). Du skal oprette dem manuelt:
+---
 
-1. Server-konfiguration
-Opret /Server/appsettings.json og indsæt følgende. Vigtigt: Udskift Twilio-oplysningerne med dine egne, hvis du ikke bruger test-credentials.
+## Forudsætninger
 
-JSON
-{
-  "ConnectionStrings": {
-    "DbConnection": "Data Source=ZoomClone.db"
-  },
-  "Jwt": {
-    "Key": "DIN_HEMMELIGE_KEY_HER",
-    "Issuer": "https://localhost:7298",
-    "Audience": "https://localhost:7298",
-    "ExpireMinutes": 120
-  },
-  "Client": {
-    "BaseAddress": "https://localhost:7128"
-  },
-  "Twilio": {
-    "AccountSid": "DIT_ACCOUNT_SID",
-    "ApiKey": "DIN_API_KEY",
-    "ApiSecret": "DIN_API_SECRET",
-    "AuthToken": "DIT_AUTH_TOKEN"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
-    }
-  },
-  "AllowedHosts": "*"
+- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [Visual Studio 2022+](https://visualstudio.microsoft.com/) eller [VS Code](https://code.visualstudio.com/)
+- SQLite (valgfrit, afhængigt af din `DbConnection`)
+
+---
+
+## Opsætning
+
+1. **Klon repository**
+
+```bash
+git clone https://github.com/<your-username>/<repository-name>.git
+cd <repository-name>
+```
+
+2. **Opret `appsettings.json`**
+
+Opret `appsettings.json` i både **Client** og **Server** projekterne.  
+Som reference skal de indeholde de nødvendige konfigurationer for:
+
+- **Server**: ConnectionStrings, JWT, Client BaseAddress, Twilio, Logging
+- **Client**: Logging, HttpClient BaseAddress
+
+Eksempel:
+
+```text
+<Server>/appsettings.json
+<Client>/wwwroot/appsettings.json
+```
+
+> Sørg for at tilpasse værdierne efter din lokale udviklingsmiljø (ports, JWT keys, Twilio nøgler mv.).
+
+---
+
+## Kørsel af projektet
+
+### 1. Start Server
+
+Naviger til Server-projektet og kør:
+
+```bash
+dotnet run --project Server/Server.csproj
+```
+
+Serveren vil starte på den port, der er angivet i `appsettings.json` (f.eks. `https://localhost:7298`).
+
+### 2. Start Client
+
+Naviger til Client-projektet og kør:
+
+```bash
+dotnet run --project Client/Client.csproj
+```
+
+Clienten vil køre på den port, der er angivet i `appsettings.json` (f.eks. `https://localhost:7128`).
+
+### 3. Brug løsningen
+
+- Åbn browseren og gå til Client URL (`https://localhost:7128`)
+- Clienten vil kommunikere med Serveren via API.
+
+---
+
+## Database
+
+Dette projekt bruger SQLite til lokal udvikling.
+
+- Connection string konfigureres i Server `appsettings.json`:
+  
+```json
+"ConnectionStrings": {
+  "DbConnection": "Data Source=ZoomClone.db"
 }
+```
 
-2. Client-konfiguration
-Opret /Client/wwwroot/appsettings.json:
+- Database vil blive oprettet automatisk ved første kørsel, hvis den ikke findes.
 
-JSON
-{
-  "HttpClient": {
-    "Name": "ApiClient",
-    "BaseAddress": "https://localhost:7298"
-  },
-  "Token": {
-    "Key": "token"
-  }
-}
+---
 
-Opstart af projektet
-Da dette er en hosted løsning, skal du altid starte Server-projektet, som derefter vil servere din Blazor Client.
 
-Visual Studio
-Sæt Server som "Startup Project".
+## Teknologier
 
-Tryk F5.
+- Blazor WebAssembly
+- ASP.NET Core WebAPI
+- Entity Framework Core (SQLite)
+- JWT Authentication
+- Twilio API
 
-Terminal
-Bash
-dotnet run --project Server
-🏗 Database (Entity Framework)
-Hvis du har ændret i modellerne i Shared eller Server, skal du opdatere din SQLite database:
+---
+## Design Patterns og Arkitektur
 
-dotnet ef migrations add InitialCreate --project Server
+Dette projekt anvender følgende patterns:
 
-dotnet ef database update --project Server
+- Vertical Sliced Layer Architecture
+
+- CQRS Pattern
+
+- Mediator Design Pattern
+
