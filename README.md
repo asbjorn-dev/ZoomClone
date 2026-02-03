@@ -23,8 +23,8 @@ Dette repository indeholder en Blazor-løsning med tre projekter:
 1. **Klon repository**
 
 ```bash
-git clone https://github.com/<your-username>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/asbjorn-dev/ZoomClone.git
+cd ZoomCloneApp
 ```
 
 2. **Opret `appsettings.json`**
