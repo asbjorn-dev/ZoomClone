@@ -1,0 +1,25 @@
+# --- secrets ---
+appsettings.json
+appsettings.Development.json
+
+# --- Standard .NET ignore regler ---
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.doccache
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.doccache
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/

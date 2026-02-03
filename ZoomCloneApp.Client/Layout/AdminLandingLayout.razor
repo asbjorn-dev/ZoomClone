@@ -1,0 +1,12 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+@using ZoomCloneApp.Client.Pages
+@using ZoomCloneApp.Client.Pages.Admin
+@inherits LayoutComponentBase
+
+<HeaderComponent/>
+<div class="bg-info-subtle" style="height: 90vh">
+    <FluentGrid Justify="JustifyContent.Center" Class="p-5">
+        @Body
+    </FluentGrid>
+</div>
+<FooterComponent/>

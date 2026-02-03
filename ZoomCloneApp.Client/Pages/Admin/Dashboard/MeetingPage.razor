@@ -1,0 +1,67 @@
+﻿@page "/meeting/{MeetingId}"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using ZoomCloneApp.Shared.Meeting.Responses
+@attribute [Authorize]
+@layout DashboardLayout
+
+<div class="row" style="opacity:@PageOpacity">
+    <div class="col-lg-12 card border-0">
+        <div class="card-body video-conference-container" id="@ContainerId"></div>
+    </div>
+</div>
+
+@code {
+    int PageOpacity = 0;
+    bool showLoader = false;
+    bool isMessageModelOpen = false;
+    string Message = string.Empty;
+    string ContainerId = "host-video-container";
+    [Parameter] public string MeetingId { get; set; } = string.Empty;
+    // Gets the users authentication status
+    [CascadingParameter] Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(MeetingId))
+            NavigationManager.NavigateTo("/dashboard");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        showLoader = true;
+
+        // gets the username from auth state
+        var user = (await AuthState!).User;
+        string? name = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
+        if (string.IsNullOrEmpty(name))
+        {
+            Message = "Unable to retrieve user information";
+            isMessageModelOpen = true;
+            showLoader = false;
+            return;
+        }
+
+        // gets the twilio access token
+        TwilioServiceResponse? response = await twilioService.GenerateMeetingToken(name, MeetingId)!;
+        if (!response!.IsSuccess)
+        {
+            // displays the message if error occurs while generating token for meeting
+            Message = response.Message!;
+            isMessageModelOpen = true;
+            showLoader = false;
+            return;
+        }
+
+        // starts the twilio meeting. containerid is to tell where to render the video
+        await twilioService.JoinMeeting(token: response.Data!, roomName: MeetingId, containerId: ContainerId);
+        showLoader = false;
+        PageOpacity = 1;
+    }
+
+    void Ok()
+    {
+        isMessageModelOpen = false;
+    }
+}

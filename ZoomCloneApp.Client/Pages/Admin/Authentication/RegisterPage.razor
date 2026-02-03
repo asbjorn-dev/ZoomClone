@@ -1,0 +1,101 @@
+﻿@page "/register"
+
+@using ZoomCloneApp.Shared.Authentication.Requests
+@using ZoomCloneApp.Shared.Authentication.Responses
+@using NetcodeHub.Packages.Components.Modal
+@using NetcodeHub.Packages.Components.ScreenLoader
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<div class="mt-1">
+    <EditForm Model="Register" OnValidSubmit="HandleRegister">
+        <FluentCard Class="bg-primary-subtle" Width="300px">
+            <FluentLabel Typo="Typography.Header" Class="mb-3"> Create Account </FluentLabel>
+            <hr />
+            <DataAnnotationsValidator />
+            <FluentTextField @bind-Value="Register.Name"
+                             Label="Full Name"
+                             Maxlength="100"
+                             Class="mb-3"
+                             TextFieldType="TextFieldType.Text"
+                             Style="width: 250px;" />
+                             <ValidationMessage For="()=>Register.Name" />
+
+            <FluentTextField @bind-Value="Register.Email"
+                             Label="Email"
+                             Maxlength="100"
+                             Class="mb-3"
+                             TextFieldType="TextFieldType.Email"
+                             Style="width: 250px;" />
+                            <ValidationMessage For="()=>Register.Email" />
+            <FluentTextField @bind-Value="Register.Password"
+                             Maxlength="100"
+                             Label="Password"
+                             Class="mb-3"
+                             TextFieldType="TextFieldType.Password"
+                             Style="width: 250px" />
+                            <ValidationMessage For="()=>Register.Password" />
+            
+            <FluentTextField @bind-Value="Register.ConfirmPassword"
+                             Maxlength="100"
+                             Label="Password"
+                             Class="mb-3"
+                             TextFieldType="TextFieldType.Password"
+                             Style="width: 250px" />
+                            <ValidationMessage For="()=>Register.ConfirmPassword" />
+            <br />
+            <br />
+            <FluentButton Appearance="Appearance.Accent"
+                          Type="ButtonType.Submit">Create Account</FluentButton>
+            </FluentCard>
+    </EditForm>
+</div>
+
+<NetcodeHubModal @bind-open="isModelMessageOpen"
+                 BootstrapClass="border-info rounded p-2 ml-2 mr-2"
+                 CustomStyle="min-width:400px; max-width:500px;">
+    <ContentTemplate>
+        <div class="card">
+            <div class="card-header">Notification</div>
+            <div class="card-body">
+                <div class="alert alert-info text-center">@Message</div>
+                <button class="btn btn-info" @onclick="Ok">OK</button>
+            </div>
+        </div>
+    </ContentTemplate>
+</NetcodeHubModal>
+<NetcodeHubScreenLoader Show="@showLoader" />
+
+@code {
+    bool showLoader = false;
+    bool isModelMessageOpen = false;
+    string Message = string.Empty;
+    CreateUserRequest Register = new();
+
+    async Task HandleRegister()
+    {
+        showLoader = true;
+        await Task.Delay(500);
+
+        CreateUserResponse? response = await authService.CreateUserAccount(Register);
+        {
+            if (response!.IsSuccess)
+            {
+                // when user done creating account, go to login page
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            // if create account is not success, show message to user
+            showLoader = false;
+            Message = response!.Message!;
+            isModelMessageOpen = true;
+            StateHasChanged();
+        }
+    }
+
+    void Ok()
+    {
+        isModelMessageOpen = false;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,17 @@
+﻿@page "/logout"
+@using NetcodeHub.Packages.Components.ScreenLoader
+
+<NetcodeHubScreenLoader Show="showLoader" />
+
+@code {
+    bool showLoader = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        showLoader = true;
+        await Task.Delay(500);
+        await AuthStateProvider.SetUserLoggedOut();
+        NavigationManager.NavigateTo("/", true);
+    }
+
+}

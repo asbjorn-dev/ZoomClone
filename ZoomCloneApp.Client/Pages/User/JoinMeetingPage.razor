@@ -1,0 +1,106 @@
+﻿@page "/join-meeting/{MeetingId}/{Passcode}"
+@using System.ComponentModel.DataAnnotations
+@using ZoomCloneApp.Client.Models
+@using ZoomCloneApp.Shared.Meeting.Responses
+@using NetcodeHub.Packages.Components.ScreenLoader
+@using NetcodeHub.Packages.Components.Modal
+@using Microsoft.FluentUI.AspNetCore.Components
+@layout AttendeeLayout
+
+<div class="row" style="opacity:@PageOpacity">
+    <div class="col-lg-12 card border-0">
+        <div class="card-body video-conference-container" id="@ContainerId"></div>
+    </div>
+</div>
+
+<NetcodeHubModal @bind-open="isModelOpen"
+BootstrapClass="border-success rounded p-2 ml-2 mr-2"
+CustomStyle="min-width:400px; max-width:500px;">
+    <ContentTemplate>
+        <div class="card">
+            <div class="card-header">Join Meeting</div>
+            <div class="card-body">
+                <FluentEditForm model="ConnectProfile" Enhance OnValidSubmit="ConnectToMeeting">
+                    <DataAnnotationsValidator />
+                    <div class="form-group mb-3">
+                        <FluentTextField Style="width:350px" @bind-Value="ConnectProfile.Name" Label="Provide your display name" />
+                        <ValidationMessage For="()=>ConnectProfile.Name" />
+                    </div>
+                    <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit">Join</FluentButton>
+                </FluentEditForm>
+            </div>
+        </div>
+    </ContentTemplate>
+</NetcodeHubModal>
+
+<NetcodeHubModal @bind-Open="isModelMessageOpen"
+BootstrapClass="border-info rounded p-2 ml-2 mr-2"
+CustomStyle="min-width:400px; max-width:500px;">
+    <ContentTemplate>
+        <div class="card">
+            <div class="card-header">Notification</div>
+            <div class="card-body">
+                <div class="alert alert-info text-center">@Message</div>
+                <button class="btn btn-info" @onclick="Ok">OK</button>
+            </div>
+
+        </div>
+    </ContentTemplate>
+</NetcodeHubModal>
+<NetcodeHubScreenLoader Show="showLoader" />
+
+@code {
+    [Parameter] public string MeetingId { get; set; } = string.Empty;
+    [Parameter] public string Passcode { get; set; } = string.Empty;
+
+    bool isModelOpen = false;
+    bool showLoader = false;
+    bool isModelMessageOpen = false;
+    string Message = string.Empty;
+    const string ContainerId = "client-video-container";
+    int PageOpacity = 0;
+    Profile ConnectProfile = new Profile();
+
+    protected override void OnParametersSet()
+    {
+        // if meeting id or passcode is null or empty, show error message
+        if (string.IsNullOrEmpty(MeetingId) || string.IsNullOrEmpty(Passcode))
+        {
+            Message = "Invalid meeting link. Please check the link and try again.";
+            isModelMessageOpen = true;
+            return;
+
+        }
+    }
+    protected override void OnInitialized()
+    {
+        isModelOpen = true;
+    }
+
+    void Ok()
+    {
+        isModelMessageOpen = false;
+    }
+
+    async Task ConnectToMeeting()
+    {
+        isModelOpen = false;
+        // joins the meeting as an attendee and generates the meeting join token
+        TwilioServiceResponse? response = await twilioService.GenerateMeetingToken(ConnectProfile.Name, MeetingId)!;
+        if (!response!.IsSuccess)
+        {
+            // displays the message if error occurs while joining the meeting
+            Message = response.Message!;
+            isModelMessageOpen = true;
+            showLoader = false;
+            isModelOpen = false;
+            return;
+        }
+
+        // starts the twilio meeting with token
+        await twilioService.JoinMeeting(token: response.Data!, roomName: MeetingId, containerId: ContainerId);
+
+        PageOpacity = 1;
+        showLoader = false;
+    }
+}
