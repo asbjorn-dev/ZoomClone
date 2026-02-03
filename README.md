@@ -12,7 +12,7 @@ Dette repository indeholder en Blazor-løsning med tre projekter:
 
 ## Forudsætninger
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - [Visual Studio 2022+](https://visualstudio.microsoft.com/) eller [VS Code](https://code.visualstudio.com/)
 - SQLite (valgfrit, afhængigt af din `DbConnection`)
 
